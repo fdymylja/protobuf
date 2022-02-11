@@ -41,19 +41,13 @@ package proto
  */
 
 import (
-	"bytes"
-	"compress/gzip"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-
-	"google.golang.org/protobuf/reflect/protoregistry"
-	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const debug bool = false
@@ -604,7 +598,7 @@ func MessageType(name string) reflect.Type {
 // A registry of all linked proto files.
 var (
 	protoFiles  = make(map[string][]byte) // file name => fileDescriptor
-	GlobalFiles = new(protoregistry.Files)
+	GlobalFiles = newRegistry()
 )
 
 // RegisterFile is called from generated code and maps from the
@@ -612,21 +606,10 @@ var (
 func RegisterFile(filename string, fileDescriptor []byte) {
 	protoFiles[filename] = fileDescriptor
 
-	// register to GlobalFiles registry
-	zr, err := gzip.NewReader(bytes.NewReader(fileDescriptor))
+	err := GlobalFiles.registerRaw(filename, fileDescriptor)
 	if err != nil {
-		panic(fmt.Sprintf("proto: invalid compressed file descriptor %s: %v", filename, err))
+		panic(fmt.Errorf("proto: unable to register file %s: %w", filename, err))
 	}
-
-	b, err := ioutil.ReadAll(zr)
-	if err != nil {
-		panic(fmt.Sprintf("proto: invalid compressed file descriptor %s: %v", filename, err))
-	}
-
-	protoimpl.DescBuilder{
-		RawDescriptor: b,
-		FileRegistry:  GlobalFiles,
-	}.Build()
 }
 
 // FileDescriptor returns the compressed FileDescriptorProto for a .proto file.
