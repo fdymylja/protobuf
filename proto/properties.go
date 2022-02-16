@@ -48,6 +48,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 const debug bool = false
@@ -599,6 +601,7 @@ func MessageType(name string) reflect.Type {
 var (
 	protoFiles  = make(map[string][]byte) // file name => fileDescriptor
 	GlobalFiles = newRegistry()
+	globalTypes = new(protoregistry.Types)
 )
 
 // RegisterFile is called from generated code and maps from the

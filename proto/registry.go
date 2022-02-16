@@ -73,6 +73,7 @@ func (r *registry) registerRaw(filepath string, fdZippedBytes []byte) error {
 	fd := protoimpl.DescBuilder{
 		RawDescriptor: fdBytes,
 		FileRegistry:  r,
+		TypeResolver:  globalTypes,
 	}.Build()
 
 	// save fd info
